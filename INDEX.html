@@ -284,6 +284,86 @@
       font-style: italic;
     }
 
+    /* Image Upload Section */
+    .image-upload-section {
+      background: #F8F5EE;
+      border-radius: 24px;
+      padding: 20px;
+      margin: 20px 0 30px;
+      border: 2px dashed var(--gold);
+    }
+
+    .image-upload-section h3 {
+      color: var(--blue);
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .upload-item {
+      background: white;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .upload-item label {
+      display: block;
+      font-weight: 600;
+      color: var(--blue);
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+    }
+
+    .upload-item input {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #E2DACB;
+      border-radius: 8px;
+      font-size: 0.75rem;
+    }
+
+    .preview-img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-top: 8px;
+      border: 1px solid #EDE2CF;
+    }
+
+    .btn-upload-all {
+      background: var(--gold);
+      color: var(--blue);
+      border: none;
+      padding: 10px 24px;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      font-size: 0.9rem;
+    }
+
+    .btn-upload-all:hover {
+      background: var(--gold-dark);
+      color: white;
+    }
+
+    .info-note {
+      background: #E8F0FE;
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 15px;
+      font-size: 0.85rem;
+      color: var(--blue);
+    }
+
     footer {
       text-align: center;
       padding: 32px;
@@ -294,12 +374,12 @@
       background: #FEFCF5;
     }
 
-    /* responsive */
     @media (max-width: 680px) {
       .container { padding: 0 18px; }
       .nav-btn { padding: 6px 16px; font-size: 0.85rem; }
       .logo-area h1 { font-size: 1.8rem; }
       .items-grid { gap: 20px; }
+      .upload-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
     }
   </style>
 </head>
@@ -333,8 +413,20 @@
     </div>
   </div>
 
-  <!-- ================= ITEMS PAGE: LOCAL IMAGES 1.jpg to 12.jpg ================= -->
+  <!-- ================= ITEMS PAGE with LOCAL IMAGE UPLOAD ================= -->
   <div id="itemsPage" class="page">
+    <!-- Image Upload Section - for GitHub hosting -->
+    <div class="image-upload-section">
+      <h3>📸 Upload Your Product Images (1.jpg to 12.jpg)</h3>
+      <p style="font-size:0.85rem; margin-bottom:12px;">If your images are not showing, please upload them here. These will be saved in your browser temporarily.</p>
+      <div class="upload-grid" id="uploadGrid"></div>
+      <button class="btn-upload-all" id="uploadAllBtn">📤 Upload All Images & Refresh</button>
+      <div class="info-note">
+        💡 <strong>GitHub Tip:</strong> For permanent hosting, create an "images" folder in your GitHub repository and upload your 1.jpg to 12.jpg files there.<br>
+        Then update the image paths to "images/1.jpg", "images/2.jpg", etc. Or use the uploader above to test instantly!
+      </div>
+    </div>
+
     <div class="sub-nav" id="categoryFilter">
       <button class="cat-btn active-cat" data-cat="all">All Items</button>
       <button class="cat-btn" data-cat="PANTRY">PANTRY</button>
@@ -342,7 +434,6 @@
       <button class="cat-btn" data-cat="PANTRY OR KITCHEN">PANTRY OR KITCHEN</button>
     </div>
     <div id="itemsContainer" class="items-grid">
-      <!-- dynamic items injected via JS (10+ products using local images 1.jpg to 12.jpg) -->
       <div class="no-items">Loading elegant collection...</div>
     </div>
     <div style="background:#F0EDE5; border-radius:24px; padding:16px 24px; margin-top:40px; font-size:0.85rem; color:#4F3E2E;">
@@ -368,7 +459,7 @@
       <div class="contact-info">
         <p><strong>📍 Email:</strong> elegantpantry@gmail.com</p>
         <p><strong>📞 Phone / WhatsApp:</strong> +94 77 918 6182</p>
-        <p><strong>🏠 Address:</strong> Elegant Pantry, AWASA RD,KIRIGAMPAMUNUWA,POLGASOWITA</p>
+        <p><strong>🏠 Address:</strong> Elegant Pantry, AWASA RD, KIRIGAMPAMUNUWA, POLGASOWITA</p>
         <p><strong>⏰ Hours:</strong> Mon - Sat: 9:00 AM to 6:00 PM</p>
         <div style="margin-top:32px;"><a href="https://wa.me/94779186182" target="_blank" style="background:var(--blue); color:white; padding:12px 28px; border-radius:60px; text-decoration:none; display:inline-block; font-weight:600;">Chat on WhatsApp →</a></div>
       </div>
@@ -382,35 +473,58 @@
 
 <script>
   // ----------------------------------------------
-  // ELEGANT PANTRY - 12 PREMIUM PRODUCTS with LOCAL IMAGES (1.jpg to 12.jpg)
-  // Each product uses a local image file: "1.jpg", "2.jpg", ..., "12.jpg"
-  // Categories: PANTRY, KITCHEN, PANTRY OR KITCHEN (each section gets specific photos)
-  // Buy Now button sends WhatsApp message to +94 77 9186182 with product name + custom note
+  // ELEGANT PANTRY - 12 PREMIUM PRODUCTS
+  // Supports local images with fallback and upload functionality
+  // Fix for GitHub 404 error: Added image uploader and localStorage cache
   // ----------------------------------------------
-  const WHATSAPP_NUMBER = "94779186182";   // international format without '+'
+  const WHATSAPP_NUMBER = "94779186182";
 
-  // All products now use local images from desktop (1.jpg through 12.jpg)
-  // Images are mapped sequentially so each product gets a unique local file.
-  // Ensure you have renamed your photos as 1.jpg, 2.jpg, 3.jpg ... 12.jpg inside the same folder as this HTML file.
+  // Product data with default placeholder images
   const products = [
-    { id: 1, title: "Golden Spice Canister Set", description: "Three premium airtight jars with 24k gold finish, keep spices fresh for months. Elegant gift box.", image: "1.jpg", category: "PANTRY" },
-    { id: 2, title: "Azure Cast Iron Dutch Oven", description: "Deep blue enamel, 5.5L capacity, excellent heat retention for slow cooking & baking.", image: "2.jpg", category: "KITCHEN" },
-    { id: 3, title: "Marble & Gold Serving Board", description: "Luxury rectangular board, dual-purpose: charcuterie or pantry display. Non-porous.", image: "3.jpg", category: "PANTRY OR KITCHEN" },
-    { id: 4, title: "Herb Keeper with Gold Lid", description: "Keep basil, cilantro fresh up to 2 weeks. Blue glass body, gold seal.", image: "4.jpg", category: "PANTRY" },
-    { id: 5, title: "Olive Wood Utensil Set (6pcs)", description: "Handcrafted in Italy, golden oil finish, ergonomic spoons & spatulas.", image: "5.jpg", category: "KITCHEN" },
-    { id: 6, title: "Dual-Use Glass Canister", description: "Air-tight jar with bamboo lid & gold accent – perfect for pantry rice or kitchen counters.", image: "6.jpg", category: "PANTRY OR KITCHEN" },
-    { id: 7, title: "Royal Blue Teapot & Infuser", description: "Porcelain teapot with golden handle, includes stainless steel infuser. 1.2L.", image: "7.jpg", category: "KITCHEN" },
-    { id: 8, title: "Gold Edge Dinner Plates (4pcs)", description: "Stoneware plates with gleaming gold rim, dishwasher safe. Elegant dining.", image: "8.jpg", category: "KITCHEN" },
-    { id: 9, title: "Organic Spice Rack (12 Jars)", description: "Premium glass jars with gold labels, includes turmeric, cumin, paprika & more.", image: "9.jpg", category: "PANTRY" },
-    { id: 10, title: "Bamboo & Blue Knife Block", description: "Magnetic bamboo block with 5 knives, blue ceramic coating. Modern & safe.", image: "10.jpg", category: "KITCHEN" },
-    { id: 11, title: "Glass Oil & Vinegar Dispenser", description: "Gold pouring spouts, leak-proof. Elegant duo set for pantry or kitchen island.", image: "11.jpg", category: "PANTRY OR KITCHEN" },
-    { id: 12, title: "Linen Apron with Gold Embroidery", description: "Adjustable apron, 'Elegant Pantry' gold embroidery, soft and durable.", image: "12.jpg", category: "PANTRY OR KITCHEN" }
+    { id: 1, title: "Golden Spice Canister Set", description: "Three premium airtight jars with 24k gold finish, keep spices fresh for months.", defaultImg: "1.jpg", category: "PANTRY" },
+    { id: 2, title: "Azure Cast Iron Dutch Oven", description: "Deep blue enamel, 5.5L capacity, excellent heat retention for slow cooking.", defaultImg: "2.jpg", category: "KITCHEN" },
+    { id: 3, title: "Marble & Gold Serving Board", description: "Luxury rectangular board, dual-purpose: charcuterie or pantry display.", defaultImg: "3.jpg", category: "PANTRY OR KITCHEN" },
+    { id: 4, title: "Herb Keeper with Gold Lid", description: "Keep basil, cilantro fresh up to 2 weeks. Blue glass body, gold seal.", defaultImg: "4.jpg", category: "PANTRY" },
+    { id: 5, title: "Olive Wood Utensil Set (6pcs)", description: "Handcrafted in Italy, golden oil finish, ergonomic spoons & spatulas.", defaultImg: "5.jpg", category: "KITCHEN" },
+    { id: 6, title: "Dual-Use Glass Canister", description: "Air-tight jar with bamboo lid & gold accent – perfect for pantry or kitchen.", defaultImg: "6.jpg", category: "PANTRY OR KITCHEN" },
+    { id: 7, title: "Royal Blue Teapot & Infuser", description: "Porcelain teapot with golden handle, includes stainless steel infuser.", defaultImg: "7.jpg", category: "KITCHEN" },
+    { id: 8, title: "Gold Edge Dinner Plates (4pcs)", description: "Stoneware plates with gleaming gold rim, dishwasher safe.", defaultImg: "8.jpg", category: "KITCHEN" },
+    { id: 9, title: "Organic Spice Rack (12 Jars)", description: "Premium glass jars with gold labels, includes turmeric, cumin, paprika.", defaultImg: "9.jpg", category: "PANTRY" },
+    { id: 10, title: "Bamboo & Blue Knife Block", description: "Magnetic bamboo block with 5 knives, blue ceramic coating.", defaultImg: "10.jpg", category: "KITCHEN" },
+    { id: 11, title: "Glass Oil & Vinegar Dispenser", description: "Gold pouring spouts, leak-proof. Elegant duo set for pantry or kitchen.", defaultImg: "11.jpg", category: "PANTRY OR KITCHEN" },
+    { id: 12, title: "Linen Apron with Gold Embroidery", description: "Adjustable apron, 'Elegant Pantry' gold embroidery, soft and durable.", defaultImg: "12.jpg", category: "PANTRY OR KITCHEN" }
   ];
 
   let activeCategory = "all";
-  let allItems = [...products];   // total 12 products (more than 10)
+  let allItems = [...products];
+  
+  // Store uploaded images in localStorage
+  let uploadedImages = {};
 
-  // DOM elements
+  // Load saved images from localStorage
+  function loadSavedImages() {
+    const saved = localStorage.getItem('elegant_pantry_images');
+    if (saved) {
+      try {
+        uploadedImages = JSON.parse(saved);
+      } catch(e) { console.error(e); }
+    }
+  }
+
+  // Save images to localStorage
+  function saveImagesToLocal() {
+    localStorage.setItem('elegant_pantry_images', JSON.stringify(uploadedImages));
+  }
+
+  // Get image source for a product
+  function getImageSrc(productId, defaultImg) {
+    if (uploadedImages[productId] && uploadedImages[productId].startsWith('data:image')) {
+      return uploadedImages[productId];
+    }
+    // Try to load from default path
+    return defaultImg;
+  }
+
   const itemsContainer = document.getElementById("itemsContainer");
   const homePage = document.getElementById("homePage");
   const itemsPage = document.getElementById("itemsPage");
@@ -418,7 +532,6 @@
   const contactPage = document.getElementById("contactPage");
   const navBtns = document.querySelectorAll(".nav-btn");
 
-  // Helper: send WhatsApp message with product info
   function sendWhatsApp(productTitle, productId) {
     const message = `Hello Elegant Pantry! 👋 I would like to purchase *${productTitle}* (Product ID: #${productId}). Please share price, stock info, and payment options. Thank you! ✨`;
     const encodedMsg = encodeURIComponent(message);
@@ -426,22 +539,8 @@
     window.open(whatsappUrl, "_blank");
   }
 
-  // Fallback image in case local image not found
-  function handleImageError(imgElement) {
-    if (!imgElement.dataset.fallbackUsed) {
-      imgElement.dataset.fallbackUsed = "true";
-      imgElement.src = "https://placehold.co/500x300?text=Elegant+Item";
-    }
-  }
-
-  // Render items based on active category (using local images)
   function renderItems() {
-    let filtered = [];
-    if (activeCategory === "all") {
-      filtered = [...allItems];
-    } else {
-      filtered = allItems.filter(item => item.category === activeCategory);
-    }
+    let filtered = activeCategory === "all" ? [...allItems] : allItems.filter(item => item.category === activeCategory);
 
     if (filtered.length === 0) {
       itemsContainer.innerHTML = `<div class='no-items'>✨ No items in this category. Explore other collections ✨</div>`;
@@ -450,11 +549,10 @@
 
     let html = "";
     for (let item of filtered) {
-      // Use local image path directly
-      const imgSrc = item.image;
+      const imgSrc = getImageSrc(item.id, item.defaultImg);
       html += `
         <div class="item-card">
-          <img class="item-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(item.title)}" onerror="this.onerror=null; this.src='https://placehold.co/500x300?text=Elegant+Item';">
+          <img class="item-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(item.title)}" onerror="this.src='https://placehold.co/500x300?text=Upload+Image+${item.id}'">
           <div class="item-info">
             <div class="item-title">${escapeHtml(item.title)}</div>
             <div class="item-category-badge">${escapeHtml(item.category)}</div>
@@ -466,19 +564,15 @@
     }
     itemsContainer.innerHTML = html;
 
-    // Attach event listeners to all Buy Now buttons
     const buyButtons = document.querySelectorAll(".buy-btn");
     buyButtons.forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        const prodId = btn.getAttribute("data-id");
-        const prodTitle = btn.getAttribute("data-title");
-        sendWhatsApp(prodTitle, prodId);
+        sendWhatsApp(btn.getAttribute("data-title"), btn.getAttribute("data-id"));
       });
     });
   }
 
-  // escape HTML to avoid injection
   function escapeHtml(str) {
     if (!str) return "";
     return str.replace(/[&<>]/g, function(m) {
@@ -486,32 +580,76 @@
       if (m === "<") return "&lt;";
       if (m === ">") return "&gt;";
       return m;
-    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-      return c;
     });
   }
 
-  // Category filtering logic
+  // Create upload interface
+  function createUploadInterface() {
+    const uploadGrid = document.getElementById('uploadGrid');
+    if (!uploadGrid) return;
+    
+    let html = '';
+    for (let i = 1; i <= 12; i++) {
+      const product = products.find(p => p.id === i);
+      const currentImg = uploadedImages[i] || '';
+      html += `
+        <div class="upload-item">
+          <label>Product ${i}: ${product ? product.title.substring(0, 20) + '...' : 'Item ' + i}</label>
+          <input type="file" accept="image/*" id="upload_${i}" data-id="${i}">
+          ${currentImg ? `<img class="preview-img" src="${currentImg}" alt="Preview">` : `<div style="height:80px; display:flex; align-items:center; justify-content:center; background:#F3EFE5; border-radius:8px; margin-top:8px;">No image</div>`}
+        </div>
+      `;
+    }
+    uploadGrid.innerHTML = html;
+    
+    // Add event listeners for each file input
+    for (let i = 1; i <= 12; i++) {
+      const input = document.getElementById(`upload_${i}`);
+      if (input) {
+        input.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          const id = this.getAttribute('data-id');
+          if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+              uploadedImages[id] = evt.target.result;
+              saveImagesToLocal();
+              // Update preview
+              const preview = input.parentElement.querySelector('.preview-img');
+              if (preview) {
+                preview.src = evt.target.result;
+              } else {
+                const img = document.createElement('img');
+                img.className = 'preview-img';
+                img.src = evt.target.result;
+                input.parentElement.appendChild(img);
+              }
+              // Re-render items if on items page
+              if (itemsPage.classList.contains('active-page')) {
+                renderItems();
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+    }
+  }
+
   function initCategoryFilters() {
     const catButtons = document.querySelectorAll(".cat-btn");
     catButtons.forEach(btn => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", () => {
         const cat = btn.getAttribute("data-cat");
         activeCategory = cat;
-        // update active class on category buttons
         document.querySelectorAll(".cat-btn").forEach(btn2 => {
-          if (btn2.getAttribute("data-cat") === cat) {
-            btn2.classList.add("active-cat");
-          } else {
-            btn2.classList.remove("active-cat");
-          }
+          btn2.classList.toggle("active-cat", btn2.getAttribute("data-cat") === cat);
         });
-        renderItems();    // re-render grid with new category
+        renderItems();
       });
     });
   }
 
-  // Page navigation
   function showPage(pageId) {
     homePage.classList.remove("active-page");
     itemsPage.classList.remove("active-page");
@@ -521,43 +659,49 @@
     if (pageId === "home") homePage.classList.add("active-page");
     if (pageId === "items") {
       itemsPage.classList.add("active-page");
-      // ensure items are rendered when page is shown (refresh if needed)
       renderItems();
+      createUploadInterface(); // Refresh upload interface when items page shown
     }
     if (pageId === "about") aboutPage.classList.add("active-page");
     if (pageId === "contact") contactPage.classList.add("active-page");
 
-    // update nav active style
     navBtns.forEach(btn => {
-      if (btn.getAttribute("data-page") === pageId) {
-        btn.classList.add("active");
-      } else {
-        btn.classList.remove("active");
-      }
+      btn.classList.toggle("active", btn.getAttribute("data-page") === pageId);
     });
   }
 
-  // navigation event binding
   function bindNavigation() {
     navBtns.forEach(btn => {
-      btn.addEventListener("click", () => {
-        const page = btn.getAttribute("data-page");
-        showPage(page);
-      });
+      btn.addEventListener("click", () => showPage(btn.getAttribute("data-page")));
     });
   }
 
-  // initial load: set default category = all, render products, set active page to HOME
-  function init() {
-    bindNavigation();
-    initCategoryFilters();
-    renderItems();   // preload items (home page not yet showing items but ready)
-    // by default home page active, but ensure items data is ready for later
-    showPage("home");
-    // also add fallback for items page if needed
+  // Upload all button functionality
+  function setupUploadAll() {
+    const uploadAllBtn = document.getElementById('uploadAllBtn');
+    if (uploadAllBtn) {
+      uploadAllBtn.addEventListener('click', () => {
+        // Trigger all file inputs
+        for (let i = 1; i <= 12; i++) {
+          const input = document.getElementById(`upload_${i}`);
+          if (input && input.files.length === 0) {
+            input.click();
+          }
+        }
+      });
+    }
   }
 
-  // start
+  function init() {
+    loadSavedImages();
+    bindNavigation();
+    initCategoryFilters();
+    createUploadInterface();
+    setupUploadAll();
+    renderItems();
+    showPage("home");
+  }
+
   init();
 </script>
 </body>
